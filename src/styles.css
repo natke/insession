@@ -1,0 +1,260 @@
+:root {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #1a1a2e;
+  background-color: #f0f2f5;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+header { text-align: right; margin-bottom: 1.5rem; }
+header h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+.subtitle { color: #666; font-size: 0.9rem; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 1.5rem;
+}
+.tab {
+  padding: 0.6rem 1.2rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab:hover { color: #1a1a2e; }
+.tab.active {
+  color: #4361ee;
+  border-bottom-color: #4361ee;
+}
+
+/* Tab content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.hidden { display: none !important; }
+
+/* Model status panel */
+.model-status-panel {
+  background: #f8f9fc;
+  border: 1px solid #e2e6ee;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  font-family: monospace;
+  font-size: 12px;
+  color: #4361ee;
+  display: none;
+}
+.model-status-panel.visible { display: block; }
+.model-status-panel p { margin: 0.15rem 0; }
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Session controls */
+.session-controls { display: inline-flex; flex-direction: column; gap: 0.75rem; }
+.session-controls input {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.button-group { display: flex; gap: 0.5rem; }
+.session-controls input:focus { border-color: #4361ee; }
+
+.btn-primary {
+  background: #4361ee;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-primary:hover { background: #3a56d4; }
+.btn-primary:disabled { background: #a0a0a0; cursor: not-allowed; }
+
+.btn-danger {
+  background: #e63946;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-danger:hover { background: #c1121f; }
+.btn-danger:disabled { background: #a0a0a0; cursor: not-allowed; }
+
+/* Recording indicator */
+#recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  color: #e63946;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.pulse {
+  width: 10px; height: 10px;
+  background: #e63946;
+  border-radius: 50%;
+  animation: pulse 1.2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* Transcript box */
+.transcript-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  min-height: 150px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+h3 { font-size: 1rem; margin-bottom: 0.5rem; color: #333; }
+.placeholder { color: #999; font-style: italic; }
+.hint { color: #666; font-size: 0.85rem; margin-bottom: 1rem; }
+
+/* Sessions list */
+.sessions-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+.session-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.session-header:hover { opacity: 0.7; }
+.session-item .name { font-weight: 500; }
+.session-item .date { color: #888; font-size: 0.8rem; }
+.session-transcript {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+.session-transcript pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-height: 300px;
+  overflow-y: auto;
+  color: #444;
+}
+
+/* Query form */
+.query-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.query-form input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+}
+.query-form input:focus { border-color: #4361ee; }
+
+/* Results */
+.results-box {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  min-height: 100px;
+  max-height: 500px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.results-box .source {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e0e0e0;
+  font-size: 0.8rem;
+  color: #888;
+}
+.query-entry {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+.query-entry:last-child { border-bottom: none; }
+.query-question {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #4a6cf7;
+}
+.query-answer.placeholder { color: #888; font-style: italic; }
+.query-answer .error { color: #e44; }
+
+/* Footer */
+footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root { color: #e0e0e0; background-color: #1a1a2e; }
+  .card { background: #16213e; }
+  .tab { color: #aaa; }
+  .tab.active { color: #4cc9f0; border-bottom-color: #4cc9f0; }
+  .tabs { border-bottom-color: #333; }
+  .transcript-box, .results-box, .session-item { background: #0f1629; }
+  .model-status-panel { background: #0f1629; border-color: #333; color: #4cc9f0; }
+  .session-controls input, .query-form input {
+    background: #0f1629; color: #e0e0e0; border-color: #333;
+  }
+  footer { border-top-color: #333; }
+  h3 { color: #ccc; }
+  .session-transcript { border-top-color: #333; }
+  .session-transcript pre { color: #ccc; }
+}

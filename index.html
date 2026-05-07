@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InSession</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <header>
+        <h1>In session 🧠</h1>
+        <p class="subtitle">Therapy session transcriber and progress notes assistant</p>
+      </header>
+
+      <!-- Tab Navigation -->
+      <nav class="tabs">
+        <button class="tab active" data-tab="transcribe">Record session</button>
+        <button class="tab" data-tab="sessions">Past sessions</button>
+        <button class="tab" data-tab="query">Ask questions</button>
+      </nav>
+
+      <!-- Transcription Tab -->
+      <section id="tab-transcribe" class="tab-content active">
+        <div class="card">
+          <div class="session-controls">
+            <input type="text" id="client-name" placeholder="Client name" />
+            <div class="button-group">
+              <button id="btn-record" class="btn-primary">⏺ Start Recording</button>
+              <button id="btn-stop" class="btn-danger" disabled>⏹ Stop</button>
+            </div>
+          </div>
+          <div id="recording-indicator" class="hidden">
+            <span class="pulse"></span> Recording &amp; transcribing...
+          </div>
+          <div id="transcription-area">
+            <h3>Live Transcription</h3>
+            <div id="transcription-output" class="transcript-box">
+              <p class="placeholder">Transcription will appear here in real time...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Past Sessions Tab -->
+      <section id="tab-sessions" class="tab-content hidden">
+        <div class="card">
+          <h3>Saved Sessions</h3>
+          <div id="sessions-list" class="sessions-list">
+            <p class="placeholder">No sessions recorded yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Query Tab -->
+      <section id="tab-query" class="tab-content hidden">
+        <div class="card">
+          <h3>Query Past Sessions</h3>
+          <p class="hint">Ask questions across all your transcribed sessions using on-device RAG.</p>
+          <form id="query-form" class="query-form">
+            <input type="text" id="query-input" placeholder="e.g., When did the patient first mention anxiety?" />
+            <button type="submit" class="btn-primary">🔍 Ask</button>
+          </form>
+          <div id="query-results" class="results-box"></div>
+        </div>
+      </section>
+
+      <!-- Model Status Panel -->
+      <div id="model-status" class="model-status-panel"></div>
+
+      <footer style="display:flex; justify-content:space-between; align-items:center;">
+        <p>Powered by <strong>Foundry Local SDK</strong> · ONNX Runtime · All processing on-device</p>
+        <p>Created by <a href="https://github.com/natke" target="_blank">natke <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a></p>
+      </footer>
+    </main>
+  </body>
+</html>
