@@ -19,9 +19,6 @@ src-tauri/target/
 # Tauri generated files
 src-tauri/gen/
 
-# Seeded session transcripts
-src-tauri/seed-sessions/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
