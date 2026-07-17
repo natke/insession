@@ -47,8 +47,8 @@ npm run tauri build
 
 ## Tech Stack
 
-- [Tauri v2](https://tauri.app/) — Rust + WebView desktop app framework
 - [Foundry Local SDK](https://github.com/microsoft/foundry-local) — local AI model management and inference
+- [Tauri v2](https://tauri.app/) — Rust + WebView desktop app framework
 - [cpal](https://github.com/RustAudio/cpal) — cross-platform audio capture
 - TypeScript + Vite (frontend)
 
