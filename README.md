@@ -25,7 +25,6 @@ Models are downloaded automatically on first launch via Foundry Local.
 
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Node.js](https://nodejs.org/) (v18+)
-- [Foundry Local](https://github.com/microsoft/foundry-local) installed and running
 
 ## Getting Started
 
