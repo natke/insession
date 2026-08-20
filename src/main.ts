@@ -1,6 +1,57 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
+interface StageMetric {
+  name: string;
+  duration_ms: number;
+}
+
+interface OperationMetric {
+  operation_id: string;
+  kind: "embedding" | "rag_query" | "speech_transcription";
+  model?: string;
+  started_at: string;
+  duration_ms: number;
+  success: boolean;
+  error?: string;
+  stages: StageMetric[];
+  measurements: Record<string, number>;
+  counts: Record<string, number>;
+}
+
+interface MetricsSnapshot {
+  process?: {
+    sampled_at: string;
+    resident_bytes: number;
+    resident_mib: number;
+    peak_resident_bytes: number;
+    peak_resident_mib: number;
+  };
+  in_memory_chunk_count: number;
+  transcription_count: number;
+  latest_retrieved_chunks: {
+    rank: number;
+    session_name: string;
+    score: number;
+    text: string;
+  }[];
+  recent_operations: OperationMetric[];
+  diagnostics_error?: string;
+}
+
+let diagnosticsTimer: number | undefined;
+
+function setDiagnosticsPolling(active: boolean) {
+  if (diagnosticsTimer !== undefined) {
+    window.clearInterval(diagnosticsTimer);
+    diagnosticsTimer = undefined;
+  }
+  if (active) {
+    void loadMetrics();
+    diagnosticsTimer = window.setInterval(() => void loadMetrics(), 2000);
+  }
+}
+
 // Tab switching
 function initTabs() {
   document.querySelectorAll(".tab").forEach((tab) => {
@@ -16,12 +67,39 @@ function initTabs() {
         target.classList.remove("hidden");
         target.classList.add("active");
       }
+      setDiagnosticsPolling(tab.getAttribute("data-tab") === "diagnostics");
     });
   });
 }
 
 // Recording state
 let isRecording = false;
+let recordingTimer: number | undefined;
+
+function formatDuration(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+  const minuteSeconds = `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  return hours > 0 ? `${hours}:${minuteSeconds}` : minuteSeconds;
+}
+
+function startRecordingTimer() {
+  const timer = document.getElementById("recording-timer")!;
+  const startedAt = performance.now();
+  timer.textContent = "00:00";
+  recordingTimer = window.setInterval(() => {
+    timer.textContent = formatDuration((performance.now() - startedAt) / 1000);
+  }, 250);
+}
+
+function stopRecordingTimer() {
+  if (recordingTimer !== undefined) {
+    window.clearInterval(recordingTimer);
+    recordingTimer = undefined;
+  }
+}
 
 function initRecording() {
   const btnRecord = document.getElementById("btn-record") as HTMLButtonElement;
@@ -35,17 +113,20 @@ function initRecording() {
     const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     const sessionName = `${clientName} — ${dateStr}`;
 
-    isRecording = true;
     btnRecord.disabled = true;
-    btnStop.disabled = false;
-    indicator.classList.remove("hidden");
+    btnStop.disabled = true;
     output.innerHTML = "";
 
     // Call Rust backend to start transcription
     try {
       await invoke("start_transcription", { sessionName });
+      isRecording = true;
+      btnStop.disabled = false;
+      indicator.classList.remove("hidden");
+      startRecordingTimer();
       pollTranscription(output);
     } catch (e) {
+      btnRecord.disabled = false;
       output.innerHTML = `<p class="placeholder">Error: ${e}</p>`;
     }
   });
@@ -55,6 +136,7 @@ function initRecording() {
     btnRecord.disabled = false;
     btnStop.disabled = true;
     indicator.classList.add("hidden");
+    stopRecordingTimer();
 
     try {
       const sessionName = await invoke("stop_transcription") as string;
@@ -92,7 +174,12 @@ async function pollTranscription(output: HTMLElement) {
 async function loadSessions() {
   const list = document.getElementById("sessions-list")!;
   try {
-    const sessions = await invoke("list_sessions") as Array<{ name: string; date: string; transcript: string }>;
+    const sessions = await invoke("list_sessions") as Array<{
+      name: string;
+      date: string;
+      transcript: string;
+      duration_seconds: number;
+    }>;
     if (sessions.length === 0) {
       list.innerHTML = '<p class="placeholder">No sessions recorded yet.</p>';
       return;
@@ -102,7 +189,10 @@ async function loadSessions() {
         <div class="session-item" data-session="${s.name}">
           <div class="session-header">
             <span class="name">${s.name}</span>
-            <span class="date">${s.date}</span>
+            <span class="session-meta">
+              <span class="duration">${s.duration_seconds > 0 ? formatDuration(s.duration_seconds) : "Duration unavailable"}</span>
+              <span class="date">${s.date}</span>
+            </span>
           </div>
           <div class="session-transcript" style="display:none;">
             <pre>${s.transcript}</pre>
@@ -177,6 +267,185 @@ function initQuery() {
       entry.querySelector(".query-answer")!.classList.remove("placeholder");
     }
   });
+}
+
+function formatMilliseconds(value: number | undefined): string {
+  if (value === undefined) return "—";
+  if (value < 1000) return `${value.toFixed(0)} ms`;
+  return `${(value / 1000).toFixed(2)} s`;
+}
+
+function operationLabel(kind: OperationMetric["kind"]): string {
+  switch (kind) {
+    case "rag_query": return "RAG query";
+    case "speech_transcription": return "Speech";
+    case "embedding": return "Embedding";
+  }
+}
+
+function setText(id: string, value: string) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value;
+}
+
+function renderMetrics(snapshot: MetricsSnapshot) {
+  setText("diagnostics-status", `Updated ${new Date().toLocaleTimeString()}`);
+
+  if (snapshot.process) {
+    setText("metric-memory", `${snapshot.process.resident_mib.toFixed(1)} MiB`);
+    setText("metric-memory-peak", `Peak ${snapshot.process.peak_resident_mib.toFixed(1)} MiB`);
+  } else {
+    setText("metric-memory", "Unavailable");
+    setText("metric-memory-peak", "Peak unavailable");
+  }
+  setText("metric-total-chunks", snapshot.in_memory_chunk_count.toLocaleString());
+  setText("metric-total-transcriptions", snapshot.transcription_count.toLocaleString());
+
+  const operations = snapshot.recent_operations;
+  const latestRag = operations.find((operation) => operation.kind === "rag_query" && operation.success);
+  const latestEmbedding = operations.find((operation) => operation.kind === "embedding");
+  const latestSpeech = operations.find((operation) => operation.kind === "speech_transcription");
+  const latestModelLoad = operations.find((operation) =>
+    operation.stages.some((stage) => stage.name.includes("model_load"))
+  );
+  const failures = operations.filter((operation) => !operation.success);
+
+  setText("metric-ttft", formatMilliseconds(latestRag?.measurements.time_to_first_token_ms));
+  const exactThroughput = latestRag?.measurements.tokens_per_second;
+  const estimatedThroughput = latestRag?.measurements.estimated_tokens_per_second;
+  const throughput = exactThroughput ?? estimatedThroughput;
+  setText("metric-throughput", throughput === undefined ? "—" : `${throughput.toFixed(1)} tok/s`);
+  setText(
+    "metric-throughput-detail",
+    throughput === undefined
+      ? "No chat completion yet"
+      : exactThroughput === undefined
+        ? "Estimated tokens/second"
+        : "API-reported tokens/second"
+  );
+  const promptTokens = latestRag?.counts.prompt_tokens;
+  const completionTokens = latestRag?.counts.completion_tokens;
+  const totalTokens = latestRag?.counts.total_tokens;
+  setText(
+    "metric-token-usage",
+    promptTokens === undefined || completionTokens === undefined
+      ? "—"
+      : `${promptTokens.toLocaleString()} in / ${completionTokens.toLocaleString()} out`
+  );
+  setText(
+    "metric-token-total",
+    totalTokens === undefined
+      ? "API usage unavailable"
+      : `${totalTokens.toLocaleString()} total tokens`
+  );
+  setText("metric-rag-latency", formatMilliseconds(latestRag?.duration_ms));
+
+  const loadStage = latestModelLoad?.stages
+    .slice()
+    .reverse()
+    .find((stage) => stage.name.includes("model_load"));
+  setText("metric-model-load", formatMilliseconds(loadStage?.duration_ms));
+  setText("metric-model-name", latestModelLoad?.model ?? "No model operation yet");
+
+  setText("metric-embedding", formatMilliseconds(latestEmbedding?.duration_ms));
+  setText(
+    "metric-embedding-detail",
+    latestEmbedding
+      ? `${latestEmbedding.counts.chunk_count ?? 0} chunks`
+      : "No embedding operation yet"
+  );
+
+  setText(
+    "metric-speech",
+    formatMilliseconds(latestSpeech?.measurements.time_to_first_result_ms)
+  );
+  setText(
+    "metric-speech-detail",
+    latestSpeech
+      ? `${latestSpeech.counts.transcription_result_count ?? 0} results · ${formatMilliseconds(latestSpeech.duration_ms)} total`
+      : "No transcription operation yet"
+  );
+  setText("metric-failures", failures.length.toString());
+
+  const retrievedChunks = document.getElementById("diagnostics-retrieved-chunks")!;
+  retrievedChunks.replaceChildren();
+  if (snapshot.latest_retrieved_chunks.length === 0) {
+    const placeholder = document.createElement("p");
+    placeholder.className = "placeholder";
+    placeholder.textContent = "Ask a question to see the chunks selected for its answer.";
+    retrievedChunks.appendChild(placeholder);
+  } else {
+    for (const chunk of snapshot.latest_retrieved_chunks) {
+      const item = document.createElement("article");
+      item.className = "retrieved-chunk";
+
+      const heading = document.createElement("div");
+      heading.className = "retrieved-chunk-heading";
+      const title = document.createElement("strong");
+      title.textContent = `${chunk.rank}. ${chunk.session_name}`;
+      const score = document.createElement("span");
+      score.textContent = `Score ${chunk.score.toFixed(3)}`;
+      heading.append(title, score);
+
+      const text = document.createElement("p");
+      text.textContent = chunk.text;
+      item.append(heading, text);
+      retrievedChunks.appendChild(item);
+    }
+  }
+
+  const diagnosticsError = document.getElementById("diagnostics-error")!;
+  if (snapshot.diagnostics_error) {
+    diagnosticsError.textContent = snapshot.diagnostics_error;
+    diagnosticsError.classList.remove("hidden");
+  } else {
+    diagnosticsError.textContent = "";
+    diagnosticsError.classList.add("hidden");
+  }
+
+  const recent = document.getElementById("metrics-recent")!;
+  recent.replaceChildren();
+  if (operations.length === 0) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.className = "placeholder";
+    cell.textContent = "No instrumented operations yet.";
+    row.appendChild(cell);
+    recent.appendChild(row);
+    return;
+  }
+
+  for (const operation of operations.slice(0, 10)) {
+    const row = document.createElement("tr");
+    const values = [
+      operationLabel(operation.kind),
+      operation.model ?? "—",
+      formatMilliseconds(operation.duration_ms),
+      operation.success ? "Success" : `Failed: ${operation.error ?? "Unknown error"}`,
+    ];
+    for (const value of values) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.appendChild(cell);
+    }
+    row.classList.toggle("metric-failed", !operation.success);
+    recent.appendChild(row);
+  }
+}
+
+async function loadMetrics() {
+  try {
+    const snapshot = await invoke<MetricsSnapshot>("get_metrics_snapshot");
+    renderMetrics(snapshot);
+  } catch (error) {
+    setText("diagnostics-status", "Metrics unavailable");
+    const diagnosticsError = document.getElementById("diagnostics-error");
+    if (diagnosticsError) {
+      diagnosticsError.textContent = String(error);
+      diagnosticsError.classList.remove("hidden");
+    }
+  }
 }
 
 // Init

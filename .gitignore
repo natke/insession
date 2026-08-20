@@ -36,3 +36,7 @@ src-tauri/gen/
 .env
 .env.*
 !.env.example
+
+# Speech data
+datasets
+
