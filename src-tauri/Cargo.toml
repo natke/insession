@@ -27,6 +27,6 @@ chrono = "0.4"
 cpal = "0.15"
 hound = "3.5"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
-foundry-local-sdk = "1.1.0"
+foundry-local-sdk = { path = "../vendor/foundry-local-sdk-2.0.1" }
 tokio-stream = "0.1"
-
+sysinfo = "0.33.1"

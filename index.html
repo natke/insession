@@ -20,6 +20,7 @@
         <button class="tab active" data-tab="transcribe">Record session</button>
         <button class="tab" data-tab="sessions">Past sessions</button>
         <button class="tab" data-tab="query">Ask questions</button>
+        <button class="tab" data-tab="diagnostics">Diagnostics</button>
       </nav>
 
       <!-- Transcription Tab -->
@@ -33,7 +34,9 @@
             </div>
           </div>
           <div id="recording-indicator" class="hidden">
-            <span class="pulse"></span> Recording &amp; transcribing...
+            <span class="pulse"></span>
+            <span>Recording &amp; transcribing...</span>
+            <span id="recording-timer">00:00</span>
           </div>
           <div id="transcription-area">
             <h3>Live Transcription</h3>
@@ -64,6 +67,117 @@
             <button type="submit" class="btn-primary">🔍 Ask</button>
           </form>
           <div id="query-results" class="results-box"></div>
+        </div>
+      </section>
+
+      <!-- Diagnostics Tab -->
+      <section id="tab-diagnostics" class="tab-content hidden">
+        <div class="card">
+          <div class="diagnostics-heading">
+            <div>
+              <h3>Local Performance Diagnostics</h3>
+              <p class="hint">Current session metrics</p>
+            </div>
+            <span id="diagnostics-status" class="diagnostics-status">Waiting for metrics</span>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-group">
+              <h4 class="metric-group-title">App</h4>
+              <div class="metric-row">
+                <div class="metric-card">
+                  <span class="metric-label">Memory</span>
+                  <strong id="metric-memory">—</strong>
+                  <small id="metric-memory-peak">Peak —</small>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Latest model load</span>
+                  <strong id="metric-model-load">—</strong>
+                  <small id="metric-model-name">No model operation yet</small>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Failures</span>
+                  <strong id="metric-failures">0</strong>
+                  <small>Recent operation failures</small>
+                </div>
+              </div>
+            </div>
+            <div class="metric-group">
+              <h4 class="metric-group-title">Chat</h4>
+              <div class="metric-row">
+                <div class="metric-card">
+                  <span class="metric-label">TTFT</span>
+                  <strong id="metric-ttft">—</strong>
+                  <small>First non-empty streamed content</small>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Throughput</span>
+                  <strong id="metric-throughput">—</strong>
+                  <small id="metric-throughput-detail">No chat completion yet</small>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Tokens</span>
+                  <strong id="metric-token-usage">—</strong>
+                  <small id="metric-token-total">API usage unavailable</small>
+                </div>
+              </div>
+            </div>
+            <div class="metric-group">
+              <h4 class="metric-group-title">RAG and embeddings</h4>
+              <div class="metric-row">
+                <div class="metric-card">
+                  <span class="metric-label">RAG latency</span>
+                  <strong id="metric-rag-latency">—</strong>
+                  <small>End to end</small>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Embedding</span>
+                  <strong id="metric-embedding">—</strong>
+                  <small id="metric-embedding-detail">No embedding operation yet</small>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">In-memory chunks</span>
+                  <strong id="metric-total-chunks">0</strong>
+                  <small>Across all embedded transcriptions</small>
+                </div>
+              </div>
+            </div>
+            <div class="metric-group">
+              <h4 class="metric-group-title">Voice</h4>
+              <div class="metric-row">
+                <div class="metric-card">
+                  <span class="metric-label">TTFST</span>
+                  <strong id="metric-speech">—</strong>
+                  <small id="metric-speech-detail">No transcription operation yet</small>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Transcriptions</span>
+                  <strong id="metric-total-transcriptions">0</strong>
+                  <small>Total saved sessions loaded</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="diagnostics-error" class="diagnostics-error hidden"></div>
+          <h3 class="recent-metrics-title">Chunks selected for the last question</h3>
+          <div id="diagnostics-retrieved-chunks" class="retrieved-chunks">
+            <p class="placeholder">Ask a question to see the chunks selected for its answer.</p>
+          </div>
+          <h3 class="recent-metrics-title">Recent operations</h3>
+          <div class="metrics-table-wrap">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Operation</th>
+                  <th>Model</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="metrics-recent">
+                <tr><td colspan="4" class="placeholder">No instrumented operations yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
