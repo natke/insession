@@ -33,8 +33,8 @@ struct AppState {
     session_audio: Vec<f32>,
     // Handle to stop the capture thread
     capture_handle: Option<std::thread::JoinHandle<()>>,
-    // Foundry Local manager (initialized once — static singleton)
-    manager: Option<&'static FoundryLocalManager>,
+    // Foundry Local manager (initialized once and shared across commands)
+    manager: Option<Arc<FoundryLocalManager>>,
     // Live transcription: audio sender and accumulated transcript
     audio_tx: Option<tokio::sync::mpsc::Sender<Vec<u8>>>,
     live_transcript: Arc<Mutex<String>>,
